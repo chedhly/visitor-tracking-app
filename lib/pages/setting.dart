@@ -299,4 +299,30 @@ class _SettingState extends State<Setting> {
       ),
     );
   }
+
+  void _exportDatabase() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Export Database'),
+        content: Text('Database export functionality will create a backup file with all visitor data.\n\nThis feature will be implemented based on your specific requirements.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              // TODO: Implement actual export
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Export feature coming soon')),
+              );
+            },
+            child: Text('Export'),
+          ),
+        ],
+      ),
+    );
+  }
 }

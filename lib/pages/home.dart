@@ -4,6 +4,9 @@ import 'package:visitor_tracking_app/classes/sidebar.dart';
 import 'package:visitor_tracking_app/classes/sections.dart';
 import 'package:visitor_tracking_app/services/data base.dart';
 import 'package:visitor_tracking_app/services/setting_provider.dart';
+import 'package:visitor_tracking_app/services/monitoring.dart';
+import 'package:visitor_tracking_app/services/entrance.dart';
+import 'package:visitor_tracking_app/services/manual_entry_dialog.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -23,6 +26,14 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _loadData();
+    // Start monitoring service
+    MonitoringService.startMonitoring(context);
+  }
+
+  @override
+  void dispose() {
+    MonitoringService.stopMonitoring();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -76,6 +87,27 @@ class _HomeState extends State<Home> {
                 ),
                 Spacer(),
                 Icon(Icons.account_circle, size: 40),
+                SizedBox(width: 16),
+                // Manual entry button for testing
+                ElevatedButton.icon(
+                  onPressed: () => _showCameraEntry(),
+                  icon: Icon(Icons.camera_alt, color: Colors.white),
+                  label: Text('Camera Entry', style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () => _showManualEntryDialog(),
+                  icon: Icon(Icons.edit, color: Colors.white),
+                  label: Text('Manual Entry', style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
               ],
             ),
           ),
@@ -164,5 +196,27 @@ class _HomeState extends State<Home> {
         ],
       ),
     );
+  }
+
+  void _showManualEntryDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const ManualEntryDialog(),
+    ).then((_) {
+      // Refresh data after manual entry
+      _loadData();
+    });
+  }
+
+  void _showCameraEntry() async {
+    try {
+      await EntranceService.processCarEntrance(context);
+      // Refresh data after camera entry
+      _loadData();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Camera entry failed: $e')),
+      );
+    }
   }
 }

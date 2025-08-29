@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide TableCell;
 import 'package:visitor_tracking_app/classes/sidebar.dart';
 import 'package:visitor_tracking_app/classes/cartable.dart';
+import 'package:visitor_tracking_app/services/data base.dart';
 
 class History extends StatefulWidget {
   const History({super.key});
@@ -10,21 +11,84 @@ class History extends StatefulWidget {
 }
 
 class _HistoryState extends State<History> {
-  final List<Car> cars = [
-    Car(id: 1, plateNum: "8121 tunis 137", entryTime: "8:30", exitTime: "10:58", date: '9/1/2025', duration: "2h28m"),
-    Car(id: 2, plateNum: "6587 tunis 204", entryTime: "12:20", exitTime: "14:07", date: '12/5/2025', duration: "1h47m"),
-    Car(id: 3, plateNum: "1452 tunis 415", entryTime: "15:05", exitTime: "16:40", date: '20/6/2025', duration: "1h35m"),
-  ];
+  List<Car> cars = [];
+  List<Car> allCars = [];
+  bool isLoading = true;
 
   String searchQuery = "";
   DateTime? selectedDate;
 
   @override
-  Widget build(BuildContext context) {
-    final filteredCars = cars.where((car) {
-      return car.plateNum.toLowerCase().contains(searchQuery.toLowerCase());
-    }).toList();
+  void initState() {
+    super.initState();
+    _loadHistoryData();
+  }
 
+  Future<void> _loadHistoryData() async {
+    try {
+      final carsData = await RemoteDatabaseHelper.getCars();
+
+      setState(() {
+        allCars = carsData.map((carData) {
+          DateTime entryTime = DateTime.parse(carData['entry_time']);
+          String exitTimeStr = "--:--";
+          String durationStr = "";
+          String dateStr = "${entryTime.day}/${entryTime.month}/${entryTime.year}";
+
+          if (carData['exit_time'] != null) {
+            DateTime exitTime = DateTime.parse(carData['exit_time']);
+            exitTimeStr = "${exitTime.hour.toString().padLeft(2, '0')}:${exitTime.minute.toString().padLeft(2, '0')}";
+            Duration duration = exitTime.difference(entryTime);
+            durationStr = "${duration.inHours}h${duration.inMinutes.remainder(60)}m";
+          }
+
+          return Car(
+            id: carData['id'],
+            plateNum: carData['plate_number'],
+            entryTime: "${entryTime.hour.toString().padLeft(2, '0')}:${entryTime.minute.toString().padLeft(2, '0')}",
+            exitTime: exitTimeStr,
+            date: dateStr,
+            duration: durationStr,
+          );
+        }).toList();
+
+        _applyFilters();
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading history: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _applyFilters() {
+    setState(() {
+      cars = allCars.where((car) {
+        bool matchesSearch = car.plateNum.toLowerCase().contains(searchQuery.toLowerCase());
+        bool matchesDate = true;
+
+        if (selectedDate != null) {
+          // Parse car date and compare
+          List<String> dateParts = car.date!.split('/');
+          DateTime carDate = DateTime(
+            int.parse(dateParts[2]),
+            int.parse(dateParts[1]),
+            int.parse(dateParts[0]),
+          );
+          matchesDate = carDate.year == selectedDate!.year &&
+              carDate.month == selectedDate!.month &&
+              carDate.day == selectedDate!.day;
+        }
+
+        return matchesSearch && matchesDate;
+      }).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(80),
@@ -196,6 +260,23 @@ class _HistoryState extends State<History> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _exportData() {
+    // Simple export functionality - in production you'd implement CSV/PDF export
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Export Data'),
+        content: Text('Export functionality will be implemented based on your requirements.\n\nCurrent data: ${cars.length} records'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('OK'),
+          )
         ],
       ),
     );

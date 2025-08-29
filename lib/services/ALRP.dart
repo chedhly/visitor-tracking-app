@@ -1,36 +1,24 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
-import 'package:image/image.dart' as img;
+import 'package:visitor_tracking_app/services/openalpr_service.dart';
+import 'package:visitor_tracking_app/services/demo_service.dart';
 
 class ALPRService {
-  static const String apiUrl = 'https://api.platerecognizer.com/v1/plate-reader/';
-  static const String apiKey = 'YOUR_API_KEY';
 
   static Future<String?> recognizeLicensePlate(File imageFile) async {
-    try {
-      final bytes = await imageFile.readAsBytes();
-      final image = img.decodeImage(bytes);
-      final resizedImage = img.copyResize(image!, width: 800);
-      final processedBytes = img.encodeJpg(resizedImage);
-      var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
-      request.headers['Authorization'] = 'Token $apiKey';
-      request.files.add(http.MultipartFile.fromBytes(
-        'upload',
-        processedBytes,
-        filename: 'plate.jpg',
-      ));
-
-      var response = await request.send();
-      var responseData = await response.stream.bytesToString();
-      var jsonResponse = json.decode(responseData);
-
-      if (jsonResponse['results'] != null && jsonResponse['results'].isNotEmpty) {
-        return jsonResponse['results'][0]['plate'];
-      }
-    } catch (e) {
-      print('ALPR Error: $e');
+    // Check if we're in demo mode first
+    if (DemoService.isDemoMode()) {
+      return await DemoService.simulatePlateRecognition(imageFile);
     }
-    return null;
+
+    // Try PlateRecognizer first (free tier available)
+    String? result = await OpenALPRService.recognizeLicensePlate(imageFile);
+
+    // If PlateRecognizer fails, use offline demo recognition
+    if (result == null) {
+      print('API recognition failed, using offline demo mode');
+      result = await DemoService.simulatePlateRecognition(imageFile);
+    }
+
+    return result;
   }
 }

@@ -66,6 +66,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Add assets directory for any future assets
+  assets:
+    - assets/images/
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
@@ -85,14 +89,14 @@ flutter:
   fonts:
     - family: Montserrat
       fonts:
-         - asset: fonts/Montserrat-Bold.ttf
-         - asset: fonts/Montserrat-SemiBold.ttf
+        - asset: fonts/Montserrat-Bold.ttf
+        - asset: fonts/Montserrat-SemiBold.ttf
     - family: Roboto
       fonts:
-         - asset: fonts/Roboto-Bold.ttf
-         - asset: fonts/Roboto-light.ttf
-         - asset: fonts/Roboto-Medium.ttf
-         - asset: fonts/Roboto-Regular.ttf
+        - asset: fonts/Roboto-Bold.ttf
+        - asset: fonts/Roboto-light.ttf
+        - asset: fonts/Roboto-Medium.ttf
+        - asset: fonts/Roboto-Regular.ttf
     - family: Inter
       fonts:
         - asset: fonts/Inter_24pt-Regular.ttf

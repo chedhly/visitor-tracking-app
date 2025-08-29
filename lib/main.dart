@@ -6,8 +6,12 @@ import 'package:visitor_tracking_app/pages/setting.dart';
 import 'package:visitor_tracking_app/pages/todaycar.dart';
 import 'package:visitor_tracking_app/services/setting_provider.dart';
 import 'package:visitor_tracking_app/pages/login.dart';
+import 'package:visitor_tracking_app/services/data base.dart' hide Home;
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize database
+  RemoteDatabaseHelper.initializeDatabase();
   runApp(MyApp());
 }
 
