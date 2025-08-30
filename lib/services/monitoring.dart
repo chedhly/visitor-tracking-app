@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:visitor_tracking_app/services/data base.dart';
-import 'package:visitor_tracking_app/services/entrance.dart';
+import 'package:visitor_tracking_app/services/mysql_database.dart';
+import 'package:visitor_tracking_app/services/enhanced_entrance.dart';
 import 'package:visitor_tracking_app/services/notification_service.dart';
 
 class MonitoringService {
@@ -61,14 +61,14 @@ class MonitoringService {
     final random = DateTime.now().second;
     if (random < 3) { // 3/60 chance per check
       print('Car detected! Processing entrance...');
-      await EntranceService.processCarEntrance(_context!);
+      await EnhancedEntranceService.processCarEntranceWithCamera(_context!);
     }
   }
 
   static Future<void> _checkForOverstay() async {
     try {
-      final carsInside = await RemoteDatabaseHelper.getCarsInsideNow();
-      final settings = await RemoteDatabaseHelper.getSettings();
+      final carsInside = await MySQLDatabaseHelper.getCarsInsideNow();
+      final settings = await MySQLDatabaseHelper.getSettings();
 
       final maxStayHours = settings['max_stay_hours'] ?? 8;
       final maxStayMinutes = settings['max_stay_minutes'] ?? 0;
@@ -88,13 +88,13 @@ class MonitoringService {
   }
 
   static Future<void> manualCarEntry(BuildContext context) async {
-    await EntranceService.processCarEntrance(context);
+    await EnhancedEntranceService.processCarEntranceWithCamera(context);
   }
 
   static Future<List<Map<String, dynamic>>> getOverstayCars() async {
     try {
-      final carsInside = await RemoteDatabaseHelper.getCarsInsideNow();
-      final settings = await RemoteDatabaseHelper.getSettings();
+      final carsInside = await MySQLDatabaseHelper.getCarsInsideNow();
+      final settings = await MySQLDatabaseHelper.getSettings();
 
       final maxStayHours = settings['max_stay_hours'] ?? 8;
       final maxStayMinutes = settings['max_stay_minutes'] ?? 0;

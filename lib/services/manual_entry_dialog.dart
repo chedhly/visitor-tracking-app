@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:visitor_tracking_app/services/data base.dart';
+import 'package:visitor_tracking_app/services/mysql_database.dart';
 import 'package:visitor_tracking_app/services/notification_service.dart';
+import 'package:visitor_tracking_app/services/tunisian_plate_detector.dart';
 
 class ManualEntryDialog extends StatefulWidget {
   const ManualEntryDialog({Key? key}) : super(key: key);
@@ -67,8 +68,19 @@ class _ManualEntryDialogState extends State<ManualEntryDialog> {
     try {
       String plateNumber = _plateController.text.trim().toUpperCase();
 
+      // Validate Tunisian plate format
+      if (!TunisianPlateDetector.isTunisianPlate(plateNumber)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid Tunisian license plate format (e.g., 1234 TUNIS 567)')),
+        );
+        setState(() {
+          _isProcessing = false;
+        });
+        return;
+      }
+
       // Check if car is already inside
-      final existingCars = await RemoteDatabaseHelper.getCarsByPlate(plateNumber);
+      final existingCars = await MySQLDatabaseHelper.getCarsByPlate(plateNumber);
       final carInside = existingCars.any((car) => car['status'] == 'inside');
 
       if (carInside) {
@@ -79,7 +91,7 @@ class _ManualEntryDialogState extends State<ManualEntryDialog> {
         Duration duration = exitTime.difference(entryTime);
         String durationStr = '${duration.inHours}h${duration.inMinutes.remainder(60)}m';
 
-        await RemoteDatabaseHelper.updateCarExit(
+        await MySQLDatabaseHelper.updateCarExit(
           carData['id'],
           exitTime.toIso8601String(),
           durationStr,
@@ -93,7 +105,7 @@ class _ManualEntryDialogState extends State<ManualEntryDialog> {
       } else {
         // Process entry
         DateTime now = DateTime.now();
-        await RemoteDatabaseHelper.insertCar({
+        await MySQLDatabaseHelper.insertCar({
           'plate_number': plateNumber,
           'entry_time': now.toIso8601String(),
           'status': 'inside',

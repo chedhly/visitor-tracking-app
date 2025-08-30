@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:visitor_tracking_app/services/data base.dart';
+import 'package:visitor_tracking_app/services/mysql_database.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -12,11 +12,10 @@ class _LoginState extends State<Login> {
   final TextEditingController mail = TextEditingController();
   final TextEditingController pass = TextEditingController();
   bool obscure = false;
-  final RemoteDatabaseHelper dbHelper = RemoteDatabaseHelper();
 
   void _login() async {
     try {
-      final user = await RemoteDatabaseHelper.getUser(mail.text.trim());
+      final user = await MySQLDatabaseHelper.getUser(mail.text.trim());
 
       if (user != null && user['password'] == pass.text) {
         Navigator.pushReplacementNamed(context, '/home');
