@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:visitor_tracking_app/services/data base.dart';
+import 'package:visitor_tracking_app/services/mysql_database.dart';
 
 class SettingsProvider with ChangeNotifier {
-  final RemoteDatabaseHelper _dbHelper = RemoteDatabaseHelper();
+  final MySQLDatabaseHelper _dbHelper = MySQLDatabaseHelper();
 
   int _maxStayHours = 8;
   int _maxStayMinutes = 0;
@@ -27,7 +27,7 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> _loadSettings() async {
     try {
-      final settings = await _dbHelper.getSettings();
+      final settings = await MySQLDatabaseHelper.getSettings();
 
       // Handle different response structures
       if (settings.containsKey('data')) {
@@ -69,7 +69,7 @@ class SettingsProvider with ChangeNotifier {
     if (theme != null) _selectedTheme = theme;
 
     try {
-      await _dbHelper.updateSettings({
+      await MySQLDatabaseHelper.updateSettings({
         'max_stay_hours': _maxStayHours,
         'max_stay_minutes': _maxStayMinutes,
         'alert_method': _alertMethod,

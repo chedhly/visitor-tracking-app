@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:visitor_tracking_app/classes/sidebar.dart';
 import 'package:visitor_tracking_app/classes/sections.dart';
-import 'package:visitor_tracking_app/services/data base.dart';
+import 'package:visitor_tracking_app/services/mysql_database.dart';
 import 'package:visitor_tracking_app/services/setting_provider.dart';
 import 'package:visitor_tracking_app/services/monitoring.dart';
-import 'package:visitor_tracking_app/services/entrance.dart';
+import 'package:visitor_tracking_app/services/enhanced_entrance.dart';
 import 'package:visitor_tracking_app/services/manual_entry_dialog.dart';
+import 'package:visitor_tracking_app/services/pc_camera_service.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -16,7 +17,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final RemoteDatabaseHelper dbHelper = RemoteDatabaseHelper();
   int todayCarsCount = 0;
   int insideNowCount = 0;
   int overMaxStayCount = 0;
@@ -38,10 +38,10 @@ class _HomeState extends State<Home> {
 
   Future<void> _loadData() async {
     try {
-      final todayCars = await RemoteDatabaseHelper.getTodayCars();
-      final allCars = await RemoteDatabaseHelper.getCars();
-      final settings = await RemoteDatabaseHelper.getSettings();
-      final averageDurationResult = await RemoteDatabaseHelper.calculateAverageDuration();
+      final todayCars = await MySQLDatabaseHelper.getTodayCars();
+      final allCars = await MySQLDatabaseHelper.getCars();
+      final settings = await MySQLDatabaseHelper.getSettings();
+      final averageDurationResult = await MySQLDatabaseHelper.calculateAverageDuration();
 
       final maxStayHours = settings['max_stay_hours'] ?? 8;
       final maxStayMinutes = settings['max_stay_minutes'] ?? 0;
@@ -69,6 +69,7 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
+    bool isCameraAvailable = PCCameraService.isInitialized;
 
     return Scaffold(
       appBar: PreferredSize(
@@ -86,15 +87,21 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 Spacer(),
+                Icon(
+                  isCameraAvailable ? Icons.videocam : Icons.videocam_off,
+                  color: isCameraAvailable ? Colors.green : Colors.red,
+                  size: 24,
+                ),
+                SizedBox(width: 8),
                 Icon(Icons.account_circle, size: 40),
                 SizedBox(width: 16),
                 // Manual entry button for testing
                 ElevatedButton.icon(
-                  onPressed: () => _showCameraEntry(),
+                  onPressed: isCameraAvailable ? _showCameraDetection : null,
                   icon: Icon(Icons.camera_alt, color: Colors.white),
-                  label: Text('Camera Entry', style: TextStyle(color: Colors.white)),
+                  label: Text('Camera Detection', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: isCameraAvailable ? Colors.green : Colors.grey,
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                 ),
@@ -208,14 +215,14 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void _showCameraEntry() async {
+  void _showCameraDetection() async {
     try {
-      await EntranceService.processCarEntrance(context);
+      await EnhancedEntranceService.processCarEntranceWithCamera(context);
       // Refresh data after camera entry
       _loadData();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Camera entry failed: $e')),
+        SnackBar(content: Text('Camera detection failed: $e')),
       );
     }
   }

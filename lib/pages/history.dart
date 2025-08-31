@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart' hide TableCell;
 import 'package:visitor_tracking_app/classes/sidebar.dart';
 import 'package:visitor_tracking_app/classes/cartable.dart';
-import 'package:visitor_tracking_app/services/data base.dart';
+import 'package:visitor_tracking_app/services/mysql_database.dart';
 
 class History extends StatefulWidget {
   const History({super.key});
@@ -26,7 +26,7 @@ class _HistoryState extends State<History> {
 
   Future<void> _loadHistoryData() async {
     try {
-      final carsData = await RemoteDatabaseHelper.getCars();
+      final carsData = await MySQLDatabaseHelper.getCars();
 
       setState(() {
         allCars = carsData.map((carData) {
@@ -239,7 +239,7 @@ class _HistoryState extends State<History> {
                             ],
                           ),
 
-                          ...filteredCars.map((car) {
+                          ...cars.map((car) {
                             return TableRow(
                               decoration: BoxDecoration(color: Colors.grey.shade100),
                               children: [
