@@ -7,19 +7,40 @@ import 'package:visitor_tracking_app/pages/todaycar.dart';
 import 'package:visitor_tracking_app/services/setting_provider.dart';
 import 'package:visitor_tracking_app/pages/login.dart';
 import 'package:visitor_tracking_app/services/mysql_database.dart';
+import 'package:visitor_tracking_app/services/database_connection_test.dart';
 import 'package:visitor_tracking_app/services/pc_camera_service.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-  // Initialize database
-  MySQLDatabaseHelper.initializeDatabase();
+
+  // Test and initialize database connection
   try {
-    await PCCameraService.initializeCamera();
-    print('Camera initialized successfully');
+    print('🔄 Initializing database connection...');
+    await DatabaseConnectionTest.createDatabaseIfNeeded();
+    bool connectionOk = await DatabaseConnectionTest.testConnection();
+
+    if (connectionOk) {
+      print('🔄 Setting up database tables...');
+    }
+
+    await MySQLDatabaseHelper.initializeDatabase();
+    print('✅ Database system ready!');
   } catch (e) {
-    print('Camera initialization failed: $e');
-    // Continue without camera - the app can still work with manual entry
+    print('❌ Database initialization failed: $e');
+    print('📱 App will continue with limited functionality');
   }
+
+  // Initialize camera
+  try {
+    print('🔄 Initializing camera...');
+    await PCCameraService.initializeCamera();
+    print('✅ Camera ready!');
+  } catch (e) {
+    print('⚠️ Camera initialization failed: $e');
+    print('📱 Manual entry will still work');
+  }
+
+  print('🚀 Starting Visitor Tracking App...');
   runApp(MyApp());
 }
 

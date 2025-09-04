@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:visitor_tracking_app/services/mysql_database.dart';
-import 'package:visitor_tracking_app/services/tunisian_plate_detector.dart';
+import 'package:visitor_tracking_app/services/openalpr_service.dart';
 import 'package:visitor_tracking_app/services/pc_camera_service.dart';
 import 'package:visitor_tracking_app/services/notification_service.dart';
 
@@ -44,31 +44,53 @@ class EnhancedEntranceService {
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
-              Text('Detecting Tunisian license plate...'),
+              Text('Recognizing license plate with OpenALPR...'),
             ],
           ),
         ),
       );
 
-      // Detect Tunisian license plate
-      String? plateNumber = await TunisianPlateDetector.detectTunisianPlate(imageFile);
+      // Preprocess image for better recognition
+      File processedImage = await OpenALPRService.preprocessImage(imageFile);
+
+      // Recognize license plate using OpenALPR
+      List<PlateResult> results = await OpenALPRService.recognizePlate(processedImage);
 
       // Close processing dialog
       Navigator.of(context).pop();
 
-      if (plateNumber == null) {
-        _showErrorDialog(context, 'Could not detect a valid Tunisian license plate. Please ensure the plate is clearly visible and try again.');
+      if (results.isEmpty) {
+        _showErrorDialog(context, 'Could not detect any license plate. Please ensure the plate is clearly visible and try again.');
         return;
       }
 
-      print('Tunisian plate detected: $plateNumber');
+      // Get the best result (highest confidence)
+      PlateResult bestResult = results.reduce((a, b) => a.confidence > b.confidence ? a : b);
+      String plateNumber = bestResult.plateNumber;
 
-      // Validate that it's a Tunisian plate
-      if (!TunisianPlateDetector.isTunisianPlate(plateNumber)) {
-        _showErrorDialog(context, 'Detected plate "$plateNumber" is not a valid Tunisian license plate format.');
+      print('License plate detected: $plateNumber (confidence: ${bestResult.confidence.toStringAsFixed(2)}%)');
+
+      // Validate confidence level
+      if (bestResult.confidence < 80.0) {
+        _showConfirmationDialog(context, plateNumber, bestResult.confidence, () async {
+          await _processPlateEntry(plateNumber, imageFile);
+        });
         return;
       }
 
+      await _processPlateEntry(plateNumber, imageFile);
+    } catch (e) {
+      // Close processing dialog if still open
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+      print('Plate recognition error: $e');
+      _showErrorDialog(context, 'Error recognizing license plate: $e');
+    }
+  }
+
+  static Future<void> _processPlateEntry(String plateNumber, File imageFile) async {
+    try {
       // Check if car is already inside
       final existingCars = await MySQLDatabaseHelper.getCarsByPlate(plateNumber);
       final carInside = existingCars.any((car) => car['status'] == 'inside');
@@ -76,7 +98,6 @@ class EnhancedEntranceService {
       if (carInside) {
         print('Car already inside, processing exit...');
         await _processCarExit(plateNumber);
-        _showSuccessDialog(context, 'Vehicle $plateNumber exited successfully', 'Exit Recorded');
         return;
       }
 
@@ -92,19 +113,14 @@ class EnhancedEntranceService {
       print('Car entry recorded for: $plateNumber');
       _openBarrier();
 
-      _showSuccessDialog(context, 'Vehicle $plateNumber entered successfully', 'Entry Recorded');
 
       // Start monitoring for overstay
       _startOverstayMonitoring(plateNumber, now);
 
       NotificationService.showEntryNotification(plateNumber);
     } catch (e) {
-      // Close processing dialog if still open
-      if (Navigator.canPop(context)) {
-        Navigator.of(context).pop();
-      }
-      print('Plate detection error: $e');
-      _showErrorDialog(context, 'Error processing license plate: $e');
+      print('Plate entry processing error: $e');
+      throw Exception('Failed to process plate entry: $e');
     }
   }
 
@@ -200,7 +216,7 @@ class EnhancedEntranceService {
           children: [
             Icon(Icons.error, color: Colors.red),
             SizedBox(width: 8),
-            Text('Detection Error'),
+            Text('Recognition Error'),
           ],
         ),
         content: Text(message),
@@ -209,6 +225,44 @@ class EnhancedEntranceService {
             onPressed: () => Navigator.pop(ctx),
             child: Text('OK'),
           )
+        ],
+      ),
+    );
+  }
+
+  static void _showConfirmationDialog(BuildContext context, String plateNumber, double confidence, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Confirm Plate Number'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Detected plate: $plateNumber'),
+            Text('Confidence: ${confidence.toStringAsFixed(1)}%'),
+            SizedBox(height: 16),
+            Text('The confidence is below 80%. Do you want to proceed with this plate number?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              onConfirm();
+            },
+            child: Text('Confirm'),
+          ),
         ],
       ),
     );

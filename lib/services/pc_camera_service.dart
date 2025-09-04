@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:visitor_tracking_app/services/openalpr_service.dart';
 
 class PCCameraService {
   static CameraController? _controller;
@@ -74,6 +75,23 @@ class PCCameraService {
       return savedFile;
     } catch (e) {
       print('Error capturing image: $e');
+      return null;
+    }
+  }
+
+  /// Captures image and immediately processes it with OpenALPR
+  static Future<List<PlateResult>?> captureAndRecognizePlate() async {
+    try {
+      File? imageFile = await captureImageForPlateDetection();
+      if (imageFile == null) {
+        throw Exception('Failed to capture image');
+      }
+
+      // Process with OpenALPR
+      List<PlateResult> results = await OpenALPRService.recognizePlate(imageFile);
+      return results;
+    } catch (e) {
+      print('Capture and recognize error: $e');
       return null;
     }
   }

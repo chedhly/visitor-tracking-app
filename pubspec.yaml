@@ -32,17 +32,17 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   mysql1: ^0.20.0
-  path: ^1.8.3
-  http: ^1.1.0
-  camera: ^0.10.5
-  path_provider: ^2.1.1
-  image_picker: ^1.0.4
-  image: ^4.0.17
-  shared_preferences: ^2.2.2
-  permission_handler: ^11.0.1
-  provider: ^6.0.5
-  opencv_dart: ^1.0.4
-  tflite_flutter: ^0.10.4
+  path: ^1.9.1
+  http: ^1.5.0
+  camera: ^0.11.2
+  path_provider: ^2.1.5
+  image_picker: ^1.2.0
+  image: ^4.5.4
+  shared_preferences: ^2.5.3
+  permission_handler: ^12.0.1
+  provider: ^6.1.5+1
+  opencv_dart: ^1.4.3
+  tflite_flutter: ^0.11.0
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
 
@@ -55,7 +55,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -69,8 +69,7 @@ flutter:
   uses-material-design: true
 
   # Add assets directory for any future assets
-  assets:
-    - assets/images/
+  # assets:
 
   # To add assets to your application, add an assets section, like this:
   # assets:

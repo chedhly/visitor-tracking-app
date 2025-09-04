@@ -15,7 +15,19 @@ class _LoginState extends State<Login> {
 
   void _login() async {
     try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
       final user = await MySQLDatabaseHelper.getUser(mail.text.trim());
+
+      // Close loading dialog
+      Navigator.pop(context);
 
       if (user != null && user['password'] == pass.text) {
         Navigator.pushReplacementNamed(context, '/home');
@@ -23,28 +35,68 @@ class _LoginState extends State<Login> {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Login Failed'),
-            content: const Text('Invalid email or password'),
+            title: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red),
+                SizedBox(width: 8),
+                Text('Login Failed'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Invalid email or password'),
+                SizedBox(height: 12),
+                Text('Default credentials:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Email: admin@draexlmaier.com'),
+                Text('Password: admin123'),
+              ],
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
+                child: Text('OK'),
               )
             ],
           ),
         );
       }
     } catch (e) {
+      // Close loading dialog if still open
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
       print('Login error: $e');
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Connection Error'),
-          content: const Text('Could not connect to server. Please check your connection.'),
+          title: Row(
+            children: [
+              Icon(Icons.warning, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Connection Error'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Could not connect to database.'),
+              SizedBox(height: 12),
+              Text('Please ensure:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('• XAMPP/WAMP is running'),
+              Text('• MySQL service is started'),
+              Text('• phpMyAdmin is accessible'),
+              SizedBox(height: 12),
+              Text('The app will work in demo mode.'),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('OK'),
+              child: Text('Continue'),
             )
           ],
         ),

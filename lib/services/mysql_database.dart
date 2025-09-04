@@ -1,24 +1,32 @@
 import 'package:mysql1/mysql1.dart';
+import 'package:visitor_tracking_app/services/database_setup.dart';
+import 'package:visitor_tracking_app/services/local_database.dart';
 
 class MySQLDatabaseHelper {
   static MySqlConnection? _connection;
+  static bool _useLocalFallback = false;
 
   static final ConnectionSettings _settings = ConnectionSettings(
     host: 'localhost',
     port: 3306,
-    user: 'visitor_app',
-    password: '',
+    user: 'root',
+    password: 'root',
     db: 'visitor_tracking_db',
   );
 
   static Future<void> initializeDatabase() async {
     try {
+      // Setup database and tables first
+      await DatabaseSetup.setupDatabase();
+      await DatabaseSetup.createTables();
+
       _connection = await MySqlConnection.connect(_settings);
       print('Connected to MySQL database');
-      await _createTables();
     } catch (e) {
       print('Database connection error: $e');
-      throw Exception('Failed to connect to database');
+      // For development, we'll use a fallback local database
+      print('Falling back to local SQLite database');
+      await LocalDatabaseHelper.initializeDatabase();
     }
   }
 
@@ -87,6 +95,10 @@ class MySQLDatabaseHelper {
 
   static Future<Map<String, dynamic>?> getUser(String email) async {
     try {
+      if (_useLocalFallback) {
+        return await LocalDatabaseHelper.getUser(email);
+      }
+
       var results = await _connection!.query(
           'SELECT * FROM users WHERE email = ?',
           [email]
@@ -109,14 +121,20 @@ class MySQLDatabaseHelper {
 
   static Future<void> insertCar(Map<String, dynamic> carData) async {
     try {
+      if (_useLocalFallback) {
+        return await LocalDatabaseHelper.insertCar(carData);
+      }
+
       await _connection!.query('''
-        INSERT INTO cars (plate_number, entry_time, image_path, status) 
-        VALUES (?, ?, ?, ?)
+        INSERT INTO cars (plate_number, entry_time, image_path, status, confidence_score, detection_method) 
+        VALUES (?, ?, ?, ?, ?, ?)
       ''', [
         carData['plate_number'],
         carData['entry_time'],
         carData['image_path'] ?? '',
-        carData['status'] ?? 'inside'
+        carData['status'] ?? 'inside',
+        carData['confidence_score'] ?? 0.0,
+        carData['detection_method'] ?? 'manual'
       ]);
     } catch (e) {
       print('Error inserting car: $e');
@@ -221,27 +239,44 @@ class MySQLDatabaseHelper {
 
   static Future<Map<String, dynamic>> getSettings() async {
     try {
-      var results = await _connection!.query('SELECT * FROM settings LIMIT 1');
+      var results = await _connection!.query('''
+        SELECT setting_key, setting_value, setting_type 
+        FROM settings 
+        ORDER BY setting_key
+      ''');
 
-      if (results.isNotEmpty) {
-        var row = results.first;
-        return {
-          'max_stay_hours': row['max_stay_hours'],
-          'max_stay_minutes': row['max_stay_minutes'],
-          'alert_method': row['alert_method'],
-          'language': row['language'],
-          'theme': row['theme'],
-        };
+      Map<String, dynamic> settings = {};
+
+      for (var row in results) {
+        String key = row['setting_key'];
+        String value = row['setting_value'];
+        String type = row['setting_type'];
+
+        switch (type) {
+          case 'integer':
+            settings[key] = int.tryParse(value) ?? 0;
+            break;
+          case 'boolean':
+            settings[key] = value.toLowerCase() == 'true';
+            break;
+          case 'json':
+          // Handle JSON if needed
+            settings[key] = value;
+            break;
+          default:
+            settings[key] = value;
+        }
       }
 
-      // Return defaults if no settings found
-      return {
-        'max_stay_hours': 8,
-        'max_stay_minutes': 0,
-        'alert_method': 'sound',
-        'language': 'English',
-        'theme': 'light',
-      };
+      // Ensure required settings exist with defaults
+      settings.putIfAbsent('max_stay_hours', () => 8);
+      settings.putIfAbsent('max_stay_minutes', () => 0);
+      settings.putIfAbsent('alert_method', () => 'sound');
+      settings.putIfAbsent('language', () => 'English');
+      settings.putIfAbsent('theme', () => 'light');
+      settings.putIfAbsent('demo_mode', () => true);
+
+      return settings;
     } catch (e) {
       print('Error getting settings: $e');
       return {
@@ -250,28 +285,38 @@ class MySQLDatabaseHelper {
         'alert_method': 'sound',
         'language': 'English',
         'theme': 'light',
+        'demo_mode': true,
       };
     }
   }
 
   static Future<void> updateSettings(Map<String, dynamic> settings) async {
     try {
-      await _connection!.query('''
-        UPDATE settings SET 
-          max_stay_hours = ?, 
-          max_stay_minutes = ?, 
-          alert_method = ?, 
-          language = ?, 
-          theme = ?,
+      for (String key in settings.keys) {
+        var value = settings[key];
+        String stringValue;
+        String type;
+
+        if (value is int) {
+          stringValue = value.toString();
+          type = 'integer';
+        } else if (value is bool) {
+          stringValue = value.toString();
+          type = 'boolean';
+        } else {
+          stringValue = value.toString();
+          type = 'string';
+        }
+
+        await _connection!.query('''
+          INSERT INTO settings (setting_key, setting_value, setting_type) 
+          VALUES (?, ?, ?)
+          ON DUPLICATE KEY UPDATE 
+          setting_value = VALUES(setting_value),
+          setting_type = VALUES(setting_type),
           updated_at = CURRENT_TIMESTAMP
-        WHERE id = 1
-      ''', [
-        settings['max_stay_hours'],
-        settings['max_stay_minutes'],
-        settings['alert_method'],
-        settings['language'],
-        settings['theme'],
-      ]);
+        ''', [key, stringValue, type]);
+      }
     } catch (e) {
       print('Error updating settings: $e');
       throw Exception('Failed to update settings');

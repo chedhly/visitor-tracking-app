@@ -100,106 +100,106 @@ class _TcarState extends State<Tcar> {
       ),
       body: Row(
         children: [
-        Container(
-        width: 80,
-        color: const Color(0xffffffff),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/home'),
-              child: sidebarItem(Icons.home, "", false),
+          Container(
+            width: 80,
+            color: const Color(0xffffffff),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, '/home'),
+                  child: sidebarItem(Icons.home, "", false),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, '/today'),
+                  child: sidebarItem(Icons.calendar_today, "", true),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, '/history'),
+                  child: sidebarItem(Icons.history, "", false),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, '/setting'),
+                  child: sidebarItem(Icons.settings, "", false),
+                ),
+              ],
             ),
-            GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/today'),
-              child: sidebarItem(Icons.calendar_today, "", true),
-            ),
-            GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/history'),
-              child: sidebarItem(Icons.history, "", false),
-            ),
-            GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/setting'),
-              child: sidebarItem(Icons.settings, "", false),
-            ),
-          ],
-        ),
-      ),
-      Expanded(
-        child: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+          Expanded(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 children: [
-                  Text(
-                    'Today\'s Vehicles (${cars.length})',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Roboto-Bold',
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _loadTodayCars,
-                    icon: Icon(Icons.refresh, color: Colors.white),
-                    label: Text('Refresh', style: TextStyle(color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16),
-              Table(
-                border: TableBorder.all(color: Colors.black26, width: 1),
-                columnWidths: const {
-                  0: FixedColumnWidth(60),
-                  1: FlexColumnWidth(),
-                  2: FixedColumnWidth(120),
-                  3: FixedColumnWidth(120),
-                  4: FixedColumnWidth(120),
-                },
-                children: [
-                  TableRow(
-                    decoration: BoxDecoration(color: Colors.grey.shade300),
-                    children: const [
-                      TableHeader("ID"),
-                      TableHeader("Plate Number"),
-                      TableHeader("Entry Time"),
-                      TableHeader("Exit Time"),
-                      TableHeader("Duration"),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Today\'s Vehicles (${cars.length})',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Roboto-Bold',
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _loadTodayCars,
+                        icon: Icon(Icons.refresh, color: Colors.white),
+                        label: Text('Refresh', style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                        ),
+                      ),
                     ],
                   ),
+                  SizedBox(height: 16),
+                  Table(
+                    border: TableBorder.all(color: Colors.black26, width: 1),
+                    columnWidths: const {
+                      0: FixedColumnWidth(60),
+                      1: FlexColumnWidth(),
+                      2: FixedColumnWidth(120),
+                      3: FixedColumnWidth(120),
+                      4: FixedColumnWidth(120),
+                    },
+                    children: [
+                      TableRow(
+                        decoration: BoxDecoration(color: Colors.grey.shade300),
+                        children: const [
+                          TableHeader("ID"),
+                          TableHeader("Plate Number"),
+                          TableHeader("Entry Time"),
+                          TableHeader("Exit Time"),
+                          TableHeader("Duration"),
+                        ],
+                      ),
 
-                  ...cars.map((car) {
-                    final isOverstay = car.duration.contains(">") ||
-                        (car.exitTime == "--:--" && car.duration.isEmpty);
-                    final rowColor = isOverstay ? Colors.red.shade400 : Colors.grey.shade100;
-                    final textColor = isOverstay ? Colors.white : Colors.black;
+                      ...cars.map((car) {
+                        final isOverstay = car.duration.contains(">") ||
+                            (car.exitTime == "--:--" && car.duration.isEmpty);
+                        final rowColor = isOverstay ? Colors.red.shade400 : Colors.grey.shade100;
+                        final textColor = isOverstay ? Colors.white : Colors.black;
 
-                    return TableRow(
-                      decoration: BoxDecoration(color: rowColor),
-                      children: [
-                        TableCell(car.id.toString(), textColor),
-                        TableCell(car.plateNum, textColor),
-                        TableCell(car.entryTime, textColor),
-                        TableCell(car.exitTime, textColor),
-                        TableCell(car.duration, textColor),
-                      ],
-                    );
-                  })
+                        return TableRow(
+                          decoration: BoxDecoration(color: rowColor),
+                          children: [
+                            TableCell(car.id.toString(), textColor),
+                            TableCell(car.plateNum, textColor),
+                            TableCell(car.entryTime, textColor),
+                            TableCell(car.exitTime, textColor),
+                            TableCell(car.duration, textColor),
+                          ],
+                        );
+                      })
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-     ],
-    ),
     );
   }
 }
