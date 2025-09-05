@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:visitor_tracking_app/services/openalpr_service.dart';
+import 'package:visitor_tracking_app/services/opencv_plate_service.dart';
 import 'package:visitor_tracking_app/services/mysql_database.dart';
 import 'package:visitor_tracking_app/services/notification_service.dart';
 
@@ -261,10 +261,10 @@ class _CameraOpenALPRDialogState extends State<CameraOpenALPRDialog> {
 
     try {
       // Preprocess image
-      File processedImage = await OpenALPRService.preprocessImage(_selectedImage!);
+      File processedImage = await OpenCVPlateService.preprocessImage(_selectedImage!);
 
       // Recognize plates
-      List<PlateResult> results = await OpenALPRService.recognizePlate(processedImage);
+      List<PlateResult> results = await OpenCVPlateService.recognizePlate(processedImage);
 
       setState(() {
         _detectedPlates = results;

@@ -9,6 +9,7 @@ import 'package:visitor_tracking_app/pages/login.dart';
 import 'package:visitor_tracking_app/services/mysql_database.dart';
 import 'package:visitor_tracking_app/services/database_connection_test.dart';
 import 'package:visitor_tracking_app/services/pc_camera_service.dart';
+import 'package:visitor_tracking_app/services/opencv_plate_service.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,16 @@ void main() async{
   } catch (e) {
     print('⚠️ Camera initialization failed: $e');
     print('📱 Manual entry will still work');
+  }
+
+  // Initialize OpenCV
+  try {
+    print('🔄 Initializing OpenCV...');
+    await OpenCVPlateService.initialize();
+    print('✅ OpenCV ready!');
+  } catch (e) {
+    print('⚠️ OpenCV initialization failed: $e');
+    print('📱 Plate recognition may not work optimally');
   }
 
   print('🚀 Starting Visitor Tracking App...');

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:visitor_tracking_app/services/mysql_database.dart';
-import 'package:visitor_tracking_app/services/openalpr_service.dart';
+import 'package:visitor_tracking_app/services/opencv_plate_service.dart';
 import 'package:visitor_tracking_app/services/pc_camera_service.dart';
 import 'package:visitor_tracking_app/services/notification_service.dart';
 
@@ -51,10 +51,10 @@ class EnhancedEntranceService {
       );
 
       // Preprocess image for better recognition
-      File processedImage = await OpenALPRService.preprocessImage(imageFile);
+      File processedImage = await OpenCVPlateService.preprocessImage(imageFile);
 
       // Recognize license plate using OpenALPR
-      List<PlateResult> results = await OpenALPRService.recognizePlate(processedImage);
+      List<PlateResult> results = await OpenCVPlateService.recognizePlate(processedImage);
 
       // Close processing dialog
       Navigator.of(context).pop();

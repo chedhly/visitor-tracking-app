@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:visitor_tracking_app/services/mysql_database.dart';
 import 'package:visitor_tracking_app/services/notification_service.dart';
-import 'package:visitor_tracking_app/services/openalpr_service.dart';
+import 'package:visitor_tracking_app/services/opencv_plate_service.dart';
 
 class ManualEntryDialog extends StatefulWidget {
   const ManualEntryDialog({Key? key}) : super(key: key);
@@ -89,7 +89,7 @@ class _ManualEntryDialogState extends State<ManualEntryDialog> {
       String plateNumber = _plateController.text.trim();
 
       // Validate Tunisian plate format
-      if (!OpenALPRService.isValidTunisianPlate(plateNumber)) {
+      if (!OpenCVPlateService.isValidTunisianPlate(plateNumber)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Please enter a valid Tunisian license plate format')),
         );
