@@ -1,28 +1,27 @@
 class Visitor {
-  final int id;
+  final String id;
   final String plateNumber;
   final DateTime entryTime;
   final DateTime? exitTime;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final int? durationMinutes;
 
   Visitor({
     required this.id,
     required this.plateNumber,
     required this.entryTime,
     this.exitTime,
-    required this.createdAt,
-    required this.updatedAt,
+    this.durationMinutes,
   });
 
   factory Visitor.fromJson(Map<String, dynamic> json) {
     return Visitor(
-      id: json['id'],
+      id: json['id'].toString(),
       plateNumber: json['plate_number'],
       entryTime: DateTime.parse(json['entry_time']),
-      exitTime: json['exit_time'] != null ? DateTime.parse(json['exit_time']) : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      exitTime: json['exit_time'] != null
+          ? DateTime.parse(json['exit_time'])
+          : null,
+      durationMinutes: json['duration_minutes'] as int?,
     );
   }
 
@@ -32,17 +31,28 @@ class Visitor {
       'plate_number': plateNumber,
       'entry_time': entryTime.toIso8601String(),
       'exit_time': exitTime?.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'duration_minutes': durationMinutes,
     };
   }
 
-  String get duration {
-    if (exitTime == null) return 'Still inside';
-    final diff = exitTime!.difference(entryTime);
-    final hours = diff.inHours;
-    final minutes = diff.inMinutes % 60;
+  bool get isInside => exitTime == null;
+  
+  Duration get timeInside {
+    if (exitTime != null) {
+      return exitTime!.difference(entryTime);
+    }
+    return DateTime.now().difference(entryTime);
+  }
+
+  String get durationFormatted {
+    final duration = timeInside;
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
     return '${hours}h ${minutes}m';
+  }
+
+  bool isOverstay(int thresholdHours) {
+    return isInside && timeInside.inHours >= thresholdHours;
   }
 }
 
