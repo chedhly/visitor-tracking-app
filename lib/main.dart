@@ -11,12 +11,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: '',
+   "https://dpnpibatsyvedyjxiqdc.supabase.co"
   );
   const supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: '',
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwbnBpYmF0c3l2ZWR5anhpcWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MDIwODQsImV4cCI6MjA3NjE3ODA4NH0.EzmI3P-VNhuHsvGYXPOYyNo7ftbuJxAbM8oeiZ2GRYU"
   );
 
   if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
