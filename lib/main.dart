@@ -13,9 +13,24 @@ import 'services/settings_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: '',
+  );
+  const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
+
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw Exception(
+      'Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_ANON_KEY environment variables.',
+    );
+  }
+
   await Supabase.initialize(
-    url: 'postgresql://postgres:[PFAdrax25]@db.ajzzdwpjsmmxwwuuktpg.supabase.co:5432/postgres',
-    anonKey: 'PFAdrax25',
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   runApp(MyApp());
