@@ -10,24 +10,16 @@ import 'services/settings_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const supabaseUrl = String.fromEnvironment(
-   "https://dpnpibatsyvedyjxiqdc.supabase.co"
-  );
-  const supabaseAnonKey = String.fromEnvironment(
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwbnBpYmF0c3l2ZWR5anhpcWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MDIwODQsImV4cCI6MjA3NjE3ODA4NH0.EzmI3P-VNhuHsvGYXPOYyNo7ftbuJxAbM8oeiZ2GRYU"
-  );
+  const supabaseUrl = 'https://0ec90b57d6e95fcbda19832f.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJib2x0IiwicmVmIjoiMGVjOTBiNTdkNmU5NWZjYmRhMTk4MzJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODE1NzQsImV4cCI6MTc1ODg4MTU3NH0.9I8-U0x86Ak8t2DGaIk0HfvTSLsAyzdnz-Nw00mMkKw';
 
-  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
-    try {
-      await Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabaseAnonKey,
-      );
-    } catch (e) {
-      print('Supabase initialization error: $e');
-    }
-  } else {
-    print('Warning: Supabase credentials not set. Please set SUPABASE_URL and SUPABASE_ANON_KEY environment variables.');
+  try {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+  } catch (e) {
+    print('Supabase initialization error: $e');
   }
 
   runApp(MyApp());
