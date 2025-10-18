@@ -19,7 +19,9 @@ subprojects {
     project.evaluationDependsOn(":app")
     afterEvaluate {
         if (project.name == "google_mlkit_commons") {
-            project.android.namespace = "com.google.mlkit.common"
+            (project.extensions.findByName("android") as? com.android.build.gradle.LibraryExtension)?.apply {
+                namespace = "com.google.mlkit.common"
+            }
         }
     }
 }
