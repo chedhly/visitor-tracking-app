@@ -14,16 +14,17 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
-}
-subprojects {
-    project.evaluationDependsOn(":app")
-    afterEvaluate {
-        if (project.name == "google_mlkit_commons") {
+
+    if (project.name == "google_mlkit_commons") {
+        afterEvaluate {
             (project.extensions.findByName("android") as? com.android.build.gradle.LibraryExtension)?.apply {
                 namespace = "com.google.mlkit.common"
             }
         }
     }
+}
+subprojects {
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register<Delete>("clean") {
